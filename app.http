@@ -1,0 +1,23 @@
+POST http://localhost:3001/register/
+
+
+### api 2
+POST http://localhost:3001/login/
+Content-Type: "application/json"
+
+{
+  "username": "JoeBiden",
+  "password": "biden@123",
+}
+
+### // api3
+GET http://localhost:3001/user/tweets/feed/
+
+### api 4
+GET http://localhost:3001/user/following/
+
+### api 5
+GET http://localhost:3001/user/followers/
+
+### api 6
+GET http://localhost:3001/tweets/:tweetId/
