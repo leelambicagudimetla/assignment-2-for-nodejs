@@ -71,7 +71,7 @@ app.post("/register/", async (request, response) => {
             '${name}', 
             '${gender}'
             );`;
-    console.log(password.length);
+    //console.log(password.length);
     if (password.length < 6) {
       response.status(400);
       response.send("Password is too short");
@@ -131,10 +131,10 @@ app.get(
       offset = 0,
     } = request.query;
     const sqlQueryToFind = `
-    SELECT username,tweet,date_time AS dateTime FROM tweet 
+    SELECT DISTINCT(username),tweet,date_time AS dateTime FROM tweet 
     INNER JOIN follower ON tweet.user_id=follower.following_user_id
     INNER JOIN user ON user.user_id=tweet.user_id
-    ORDER BY '${order_by}' '${order}'
+    ORDER BY '${order_by}' ${order}
     LIMIT '${limit}' OFFSET '${offset}'; `;
     const dbUser = await db.all(sqlQueryToFind);
     response.send(dbUser.map((each) => convertUser(each)));
@@ -142,17 +142,17 @@ app.get(
 );
 
 // api 4
-app.get("/user/following/", async (request, response) => {
+app.get("/user/following/", authenticationToken, async (request, response) => {
   const followerFind = `
-    SELECT name FROM user INNER JOIN follower ON user.user_id=follower.following_user_id;`;
+    SELECT DISTINCT(name) FROM user INNER JOIN follower ON user.user_id=follower.following_user_id;`;
   const dbUser = await db.all(followerFind);
   response.send(dbUser);
 });
 
 // api 5
-app.get("/user/followers/", async (request, response) => {
+app.get("/user/followers/", authenticationToken, async (request, response) => {
   const followerFind = `
-    SELECT name FROM user INNER JOIN follower ON user.user_id=follower.follower_user_id;`;
+    SELECT DISTINCT(name) FROM user INNER JOIN follower ON user.user_id=follower.follower_user_id;`;
   const dbUser = await db.all(followerFind);
   response.send(dbUser);
 });
@@ -169,8 +169,9 @@ app.get("/tweets/:tweetId", authenticationToken, async (request, response) => {
     FROM tweet 
         INNER JOIN reply ON tweet.tweet_id=reply.tweet_id
         INNER JOIN like ON tweet.tweet_id=like.tweet_id
-    WHERE tweet.tweet_id='${tweetId}';`;
-  const tweetDetails = await db.all(gettingQuery);
+    WHERE tweet.tweet_id='${2}';`;
+  const tweetDetails = await db.get(gettingQuery);
+  //console.log(tweetDetails);
   if (tweetDetails === undefined) {
     response.status(401);
     response.send("Invalid Request");
@@ -180,5 +181,25 @@ app.get("/tweets/:tweetId", authenticationToken, async (request, response) => {
 });
 
 // api 7
-
+app.get(
+  "/tweets/:tweetId/likes/",
+  authenticationToken,
+  async (request, response) => {
+    const { tweetId } = request.params;
+    const gettingQuery = `
+    SELECT 
+        name AS likes
+    FROM user 
+        INNER JOIN tweet 
+    WHERE tweet.tweet_id='${1}';`;
+    const tweetDetails = await db.all(gettingQuery);
+    console.log(tweetDetails);
+    if (tweetDetails === undefined) {
+      response.status(401);
+      response.send("Invalid Request");
+    } else {
+      response.send(tweetDetails);
+    }
+  }
+);
 module.exports = app;
